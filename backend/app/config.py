@@ -1,4 +1,3 @@
-from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -16,15 +15,12 @@ class Settings(BaseSettings):
     # Database - use DATABASE_URL in production (e.g. PostgreSQL)
     database_url: str = "sqlite:///./ads_copilot.db"
 
-    # CORS - comma-separated in .env (e.g. https://app.example.com,https://admin.example.com)
-    cors_origins: list[str] = ["http://localhost:3000"]
+    # CORS - comma-separated in .env (e.g. http://localhost:3000,https://app.example.com)
+    cors_origins: str = "http://localhost:3000"
 
-    @field_validator("cors_origins", mode="before")
-    @classmethod
-    def parse_cors_origins(cls, v: str | list[str]) -> list[str]:
-        if isinstance(v, list):
-            return v
-        return [o.strip() for o in str(v).split(",") if o.strip()] if v else ["http://localhost:3000"]
+    @property
+    def cors_origins_list(self) -> list[str]:
+        return [o.strip() for o in self.cors_origins.split(",") if o.strip()] or ["http://localhost:3000"]
 
     # AI
     gemini_api_key: str = ""
