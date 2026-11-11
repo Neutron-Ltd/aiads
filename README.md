@@ -1,136 +1,138 @@
 # Ads Co-Pilot
 
-Human-in-the-loop AI web application for managing and creating Google Ads campaigns.
+A human-in-the-loop web app for planning and managing Google Ads campaigns.
+You organise work into **projects**. Each project links to a Google Ads account,
+and the backend can pull live campaign metrics and search-term reports from the
+Google Ads API.
 
-## Tech Stack
+> **Status:** early stage. Project management and the Google Ads data service
+> work today. The Keyword Sandbox, Creative Studio, Campaign Architect and
+> Optimization Inbox pages are placeholders for upcoming AI-assisted features.
 
-- **Frontend:** Next.js (React), Tailwind CSS, Shadcn UI, Recharts
-- **Backend:** Python 3.11+, FastAPI
-- **AI:** Google Gemini API
-- **Ads:** Google Ads API (production-ready, real data)
+## Tech stack
 
-## Project Structure
+| Layer    | Technology                                             |
+|----------|--------------------------------------------------------|
+| Frontend | Next.js 16 (React 19), Tailwind CSS 4, shadcn/ui        |
+| Backend  | Python 3.10+, FastAPI, SQLModel                        |
+| Database | SQLite for development, PostgreSQL for production      |
+| Ads      | Google Ads API (`google-ads` client library)           |
+
+## Project structure
 
 ```
-aiads/
-├── frontend/           # Next.js app
-├── backend/            # FastAPI app
-│   └── ads_copilot.db  # SQLite (dev) or use PostgreSQL in production
-└── README.md
+.
+├── backend/
+│   ├── app/
+│   │   ├── api/v1/routes/   # REST endpoints (/api/v1/projects)
+│   │   ├── models/          # SQLModel tables
+│   │   ├── schemas/         # Request/response models
+│   │   ├── services/        # Google Ads integration
+│   │   ├── config.py        # Settings loaded from environment variables
+│   │   └── main.py          # FastAPI app
+│   ├── get_refresh_token.py # One-off helper to obtain a Google Ads refresh token
+│   ├── requirements.txt
+│   └── .env.example
+├── frontend/                # Next.js app
+│   └── .env.local.example
+├── .env.example             # Overview of every setting
+├── LICENSE
+└── SECURITY.md
 ```
 
-## Setup
+## Getting started
 
 ### Prerequisites
 
-- Node.js 18+
-- Python 3.11+ (use `python3` if `python` is not available)
-- npm or pnpm
+- Node.js 20+ and npm
+- Python 3.10+
 
 ### Backend
 
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+cp .env.example .env               # then edit .env
+uvicorn app.main:app --reload
+```
 
-2. Create a virtual environment (recommended):
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. Copy the environment template and configure:
-   ```bash
-   cp .env.example .env
-   # Edit .env with your credentials
-   ```
-
-5. Run the server:
-   ```bash
-   uvicorn app.main:app --reload
-   ```
-   The API will be available at `http://localhost:8000`.
+The API runs at `http://localhost:8000`. Interactive docs are at `/docs` when
+`ENVIRONMENT` is not `production`.
 
 ### Frontend
 
-1. Navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
+```bash
+cd frontend
+npm install
+cp .env.local.example .env.local   # set NEXT_PUBLIC_API_URL if needed
+npm run dev
+```
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+The app runs at `http://localhost:3000`. On first visit you are sent to
+`/projects` to create or select a project.
 
-3. Copy the environment template (optional for local dev):
-   ```bash
-   cp .env.local.example .env.local
-   # Set NEXT_PUBLIC_API_URL if your backend runs elsewhere
-   ```
+## Configuration
 
-4. Run the development server:
-   ```bash
-   npm run dev
-   ```
-   The app will be available at `http://localhost:3000`.
+All configuration comes from environment variables. The backend reads them from
+`backend/.env`, and the frontend from `frontend/.env.local`. The repository has
+no default credentials.
 
-## Environment Variables
+### Backend
 
-### Required
+| Variable                       | Required | Description |
+|--------------------------------|----------|-------------|
+| `ENVIRONMENT`                  | no       | `development` (default) or `production`. Production disables the API docs. |
+| `DEBUG`                        | no       | `true` to log SQL statements. |
+| `DATABASE_URL`                 | no       | Defaults to `sqlite:///./ads_copilot.db`. Use a PostgreSQL URL in production. |
+| `CORS_ORIGINS`                 | no       | Comma-separated exact frontend origins. Defaults to `http://localhost:3000`. `*` is rejected. |
+| `GOOGLE_ADS_DEVELOPER_TOKEN`   | for live data | From the [Google Ads API Center](https://ads.google.com/aw/apicenter). |
+| `GOOGLE_ADS_CLIENT_ID`         | for live data | OAuth 2.0 client ID (Google Cloud Console). |
+| `GOOGLE_ADS_CLIENT_SECRET`     | for live data | OAuth 2.0 client secret. |
+| `GOOGLE_ADS_REFRESH_TOKEN`     | for live data | Generate with `python get_refresh_token.py`. |
+| `GOOGLE_ADS_LOGIN_CUSTOMER_ID` | no       | Manager (MCC) account ID, if you access client accounts through one. |
+| `GEMINI_API_KEY`               | no       | Reserved for upcoming AI features. Not used yet. |
+| `OAUTH_REDIRECT_PORT`          | no       | Local port for `get_refresh_token.py` (default `8080`). |
 
-| Variable | Description |
-|----------|-------------|
-| `GEMINI_API_KEY` | Google AI Studio API key for Gemini. Get from [aistudio.google.com/apikey](https://aistudio.google.com/apikey) |
+### Frontend
 
-### Google Ads API (required for production)
+| Variable              | Description |
+|-----------------------|-------------|
+| `NEXT_PUBLIC_API_URL` | Backend base URL. Defaults to `http://localhost:8000`. |
 
-| Variable | Description |
-|----------|-------------|
-| `GOOGLE_ADS_DEVELOPER_TOKEN` | From [Google Ads API Center](https://ads.google.com/aw/apicenter) |
-| `GOOGLE_ADS_CLIENT_ID` | OAuth 2.0 client ID (Google Cloud Console) |
-| `GOOGLE_ADS_CLIENT_SECRET` | OAuth 2.0 client secret |
-| `GOOGLE_ADS_REFRESH_TOKEN` | Obtained after user OAuth flow ([generate_user_credentials.py](https://developers.google.com/google-ads/api/docs/client-libs/python/oauth-web)) |
-| `GOOGLE_ADS_LOGIN_CUSTOMER_ID` | Optional. MCC account ID for manager accounts (format: 123-456-7890) |
+### Getting a Google Ads refresh token
 
-### Production
+1. In Google Cloud Console, create an OAuth client of type **Desktop app**. Add
+   `http://localhost:8080/` as an authorized redirect URI, or use the port you set
+   in `OAUTH_REDIRECT_PORT`.
+2. Put `GOOGLE_ADS_CLIENT_ID` and `GOOGLE_ADS_CLIENT_SECRET` in `backend/.env`.
+3. Run `python get_refresh_token.py` from `backend/`, sign in, and copy the
+   printed `GOOGLE_ADS_REFRESH_TOKEN` into `backend/.env`.
 
-| Variable | Description |
-|----------|-------------|
-| `ENVIRONMENT` | `production` for production mode |
-| `DATABASE_URL` | PostgreSQL connection string, e.g. `postgresql://user:pass@host:5432/ads_copilot` |
-| `CORS_ORIGINS` | Comma-separated allowed origins, e.g. `https://app.example.com` |
+## API
 
-## Production Deployment
+| Method | Path                           | Description |
+|--------|--------------------------------|-------------|
+| GET    | `/health`                      | Health check |
+| GET    | `/api/v1/projects`             | List projects |
+| POST   | `/api/v1/projects`             | Create a project |
+| GET    | `/api/v1/projects/{id}`        | Get a project |
+| GET    | `/api/v1/projects/{id}/full`   | Get a project with its campaigns, keywords and ad copy |
+| PUT    | `/api/v1/projects/{id}`        | Update a project |
+| DELETE | `/api/v1/projects/{id}`        | Delete a project |
 
-1. **Database:** Use PostgreSQL. Set `DATABASE_URL` in your environment.
-2. **Google Ads:** Configure all `GOOGLE_ADS_*` variables. Use a service account or OAuth flow to obtain a refresh token.
-3. **CORS:** Set `CORS_ORIGINS` to your frontend domain(s).
-4. **Environment:** Set `ENVIRONMENT=production`.
-5. **Projects:** When creating a project, set `google_ads_customer_id` to link it to a Google Ads account (format: 123-456-7890).
+## Production notes
 
-## Routes
+- Use PostgreSQL. Set `DATABASE_URL`, `ENVIRONMENT=production` and `CORS_ORIGINS`.
+- The API has **no built-in authentication**. Run it behind your own auth layer,
+  such as a reverse proxy, VPN or SSO gateway. Do not expose it publicly as-is.
+- Store credentials in your platform's secret store, not in files.
 
-| Route                | Path                  |
-|----------------------|-----------------------|
-| Projects             | `/projects`           |
-| Dashboard            | `/`                   |
-| Keyword Sandbox      | `/keyword-sandbox`    |
-| Creative Studio      | `/creative-studio`    |
-| Campaign Architect   | `/campaign-architect` |
-| Optimization Inbox   | `/optimization-inbox` |
+## Security
 
-On first visit, you will be redirected to the Project Manager (`/projects`) to select or create a project before accessing the Dashboard.
+See [SECURITY.md](SECURITY.md) for how to report a vulnerability.
 
-## Development
+## License
 
-- **Frontend:** `cd frontend && npm run dev`
-- **Backend:** `cd backend && uvicorn app.main:app --reload`
-
-Run both in separate terminals for full-stack development.
+[MIT](LICENSE) © Shamir Shakher, Neutron Ltd

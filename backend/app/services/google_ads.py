@@ -31,7 +31,10 @@ def get_client():
 
 def normalize_customer_id(customer_id: str) -> str:
     """Convert customer ID to format without dashes (required by API)."""
-    return customer_id.replace("-", "")
+    cleaned = customer_id.replace("-", "").strip()
+    if not (cleaned.isdigit() and len(cleaned) == 10):
+        raise ValueError("Google Ads customer ID must be 10 digits (e.g. 123-456-7890).")
+    return cleaned
 
 
 def fetch_campaign_metrics(customer_id: str) -> list[dict]:
@@ -113,6 +116,8 @@ def fetch_search_terms(customer_id: str, limit: int = 100) -> list[dict]:
         )
 
     customer_id_clean = normalize_customer_id(customer_id)
+    # The limit is interpolated into the GAQL query, so force it to a bounded int.
+    limit = max(1, min(int(limit), 10_000))
 
     ga_service = client.get_service("GoogleAdsService")
     query = f"""

@@ -1,8 +1,9 @@
-fastapi[standard]
-google-generativeai
-google-ads
-python-dotenv
-pydantic-settings
-sqlmodel
-aiosqlite
-psycopg2-binary
+# Requires Python 3.10+
+fastapi[standard]>=0.115
+sqlmodel>=0.0.22
+pydantic>=2.7
+pydantic-settings>=2.4
+python-dotenv>=1.0
+google-ads>=25.0
+google-auth-oauthlib>=1.2  # used by get_refresh_token.py
+psycopg2-binary>=2.9  # PostgreSQL driver (production)

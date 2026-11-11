@@ -20,9 +20,12 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins_list(self) -> list[str]:
-        return [o.strip() for o in self.cors_origins.split(",") if o.strip()] or ["http://localhost:3000"]
+        origins = [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+        if "*" in origins:
+            raise ValueError("CORS_ORIGINS must list explicit origins; '*' is not allowed.")
+        return origins or ["http://localhost:3000"]
 
-    # AI
+    # AI (reserved for upcoming Gemini features; not used yet)
     gemini_api_key: str = ""
 
     # Google Ads API - required for production

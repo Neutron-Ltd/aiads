@@ -1,10 +1,14 @@
 """
 All models in one file to avoid circular import issues with SQLAlchemy Relationship.
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 from sqlmodel import Field, Relationship, SQLModel
+
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 class Project(SQLModel, table=True):
@@ -14,7 +18,7 @@ class Project(SQLModel, table=True):
     project_name: str = Field(index=True)
     target_url: str = ""
     google_ads_customer_id: str = ""  # Google Ads account ID (e.g. 123-456-7890)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=_utcnow)
 
     campaigns: list["Campaign"] = Relationship(back_populates="project")
 
@@ -34,7 +38,7 @@ class Campaign(SQLModel, table=True):
     budget: float = 0.0
     bidding_strategy: str = ""
     status: str = Field(default=CampaignStatus.DRAFT.value)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=_utcnow)
 
     project: Project | None = Relationship(back_populates="campaigns")
     keywords: list["Keyword"] = Relationship(back_populates="campaign")
@@ -65,7 +69,7 @@ class AdCopy(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     campaign_id: int = Field(foreign_key="campaign.id", index=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=_utcnow)
 
     campaign: Campaign | None = Relationship(back_populates="ad_copies")
     headlines: list["AdCopyHeadline"] = Relationship(back_populates="ad_copy")

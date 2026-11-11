@@ -15,8 +15,9 @@ _env_path = Path(__file__).resolve().parent / ".env"
 load_dotenv(_env_path)
 
 SCOPE = "https://www.googleapis.com/auth/adwords"
-# Fixed port so redirect URI matches Google Cloud Console (add this exact URI there)
-LOCAL_PORT = 8080
+# Fixed port so redirect URI matches Google Cloud Console (add this exact URI there).
+# Override with OAUTH_REDIRECT_PORT if 8080 is taken or your OAuth client uses another port.
+LOCAL_PORT = int(os.getenv("OAUTH_REDIRECT_PORT", "8080"))
 REDIRECT_URI = f"http://localhost:{LOCAL_PORT}/"
 
 client_config = {

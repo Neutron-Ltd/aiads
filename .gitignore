@@ -1,10 +1,18 @@
 # Dependencies
 node_modules/
 
-# Environment
+# Environment and credentials
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+!.env*.example
+*.pem
+*.key
+*.p12
+google-ads.yaml
+client_secret*.json
+credentials*.json
+token*.json
 
 # Python
 __pycache__/
@@ -15,19 +23,47 @@ __pycache__/
 venv/
 .venv/
 env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 
-# Next.js
+# Next.js / build output
 frontend/.next/
 frontend/out/
-
-# Build
 frontend/build/
 dist/
+*.tsbuildinfo
 
-# Database
+# Databases, dumps and data
 *.db
+*.sqlite
+*.sqlite3
+*.sql
+*.dump
+*.bak
+/data/
+/backend/data/
+/exports/
 
-# Misc
-.DS_Store
-*.pem
+# Generated reports
+/reports/
+/output/
+/backend/reports/
+/backend/output/
+
+# Trained models
+/models/
+/backend/models/
+*.pkl
+*.joblib
+*.h5
+*.onnx
+*.pt
+*.safetensors
+
+# Logs and OS files
 *.log
+logs/
+.DS_Store

@@ -38,14 +38,18 @@ app = FastAPI(
     description="Backend API for Ads Co-Pilot - Human-in-the-loop AI for Google Ads",
     version="0.1.0",
     lifespan=lifespan,
+    # Do not publish the interactive API docs in production.
+    docs_url=None if settings.is_production else "/docs",
+    redoc_url=None if settings.is_production else "/redoc",
+    openapi_url=None if settings.is_production else "/openapi.json",
 )
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_credentials=False,  # the frontend does not send cookies
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["Content-Type"],
 )
 
 app.include_router(projects.router, prefix="/api/v1", tags=["projects"])
